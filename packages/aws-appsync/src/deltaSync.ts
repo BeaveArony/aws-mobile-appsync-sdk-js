@@ -18,7 +18,7 @@ import { SKIP_RETRY_KEY } from "./link/retry-link";
 import { DocumentNode, print, OperationDefinitionNode, FieldNode, ExecutionResult } from "graphql";
 import { getOpTypeFromOperationName, CacheOperationTypes, getUpdater, QueryWithVariables } from "./helpers/offline";
 import { boundSaveSnapshot, replaceUsingMap, EnqueuedMutationEffect, offlineEffectConfig as mutationsConfig } from "./link/offline-link";
-import { CONTROL_EVENTS_KEY } from "./link/subscription-handshake-link";
+import { CONTROL_EVENTS_KEY } from "aws-appsync-subscription-link";
 
 const logger = rootLogger.extend('deltasync');
 
@@ -597,7 +597,7 @@ const boundUpdateLastSync = (
 export const buildSync = <T = { [key: string]: any }, TVariables = OperationVariables>(
     typename: string,
     options: {
-        baseQuery?: BuildBaseQuerySyncOptions<T, TVariables>,
+        baseQuery?: BuildBaseQuerySyncOptions<T>,
         subscriptionQuery?: BuildQuerySyncOptions<TVariables>,
         deltaQuery?: BuildQuerySyncOptions<TVariables>,
         cacheUpdates?: (item: T) => QueryWithVariables[],
@@ -612,7 +612,7 @@ export const buildSync = <T = { [key: string]: any }, TVariables = OperationVari
     } = options;
     const loggerHelper = logger.extend('helper');
 
-    const result: SubscribeWithSyncOptions<T, TVariables> = {
+    const result: SubscribeWithSyncOptions<T> = {
         baseQuery: {
             ...baseQuery,
             ...(baseQuery && {
@@ -628,7 +628,7 @@ export const buildSync = <T = { [key: string]: any }, TVariables = OperationVari
             ...subscriptionQuery,
             ...(subscriptionQuery && {
                 update: (cache, { data }: ExecutionResult) => {
-                    updateBaseWithDelta<T, TVariables>(loggerHelper, baseQuery, subscriptionQuery, cache, data as T, cacheUpdates, typename, idField);
+                    updateBaseWithDelta<T>(loggerHelper, baseQuery, subscriptionQuery, cache, data as T, cacheUpdates, typename, idField);
                 }
             })
         },
@@ -636,7 +636,7 @@ export const buildSync = <T = { [key: string]: any }, TVariables = OperationVari
             ...deltaQuery,
             ...(deltaQuery && {
                 update: (cache, { data }: ExecutionResult) => {
-                    updateBaseWithDelta<T, TVariables>(loggerHelper, baseQuery, deltaQuery, cache, data as T, cacheUpdates, typename, idField);
+                    updateBaseWithDelta<T>(loggerHelper, baseQuery, deltaQuery, cache, data as T, cacheUpdates, typename, idField);
                 }
             })
         },

@@ -9,6 +9,7 @@ import { GraphQLError } from "graphql";
 import { ApolloError } from "apollo-client";
 import { AWSAppsyncGraphQLError } from "../src/types";
 import { DEFAULT_KEY_PREFIX } from "../src/store";
+(global as any).fetch = jest.fn()
 
 let setNetworkOnlineStatus: (online: boolean) => void;
 jest.mock("@redux-offline/redux-offline/lib/defaults/detectNetwork", () => (callback) => {
@@ -33,7 +34,7 @@ beforeEach(() => {
         const { AWSAppSyncClient } = require('../src/client');
         ({ isOptimistic } = require("../src/link/offline-link"));
         ({ createHttpLink } = require("apollo-link-http"));
-        ({ Signer } = require("../src/link/signer"));
+        ({ Signer } = require("aws-appsync-auth-link"));
 
         factory = (opts) => {
             return new AWSAppSyncClient(opts);
@@ -709,7 +710,9 @@ describe("Offline enabled", () => {
                 name: 'Parent'
             },
             optimisticResponse: optimisticResponseParent,
-            update: (proxy, { data }) => {
+            update: <T = {
+                [key: string]: any;
+            }>(proxy, { data }) => {
                 proxy.writeQuery({
                     query: gql`query Bla($id: ID) {
                         getParent(id: $id) {
@@ -744,7 +747,9 @@ describe("Offline enabled", () => {
                 name: 'Child'
             },
             optimisticResponse: optimisticResponseChild,
-            update: (proxy, { data }) => {
+            update: <T = {
+                [key: string]: any;
+            }>(proxy, { data }) => {
                 proxy.writeQuery({
                     query: gql`query Ble($id: ID!) {
                         getChild(id: $id) {
